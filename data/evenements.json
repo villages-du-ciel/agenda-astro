@@ -1,0 +1,63 @@
+
+[
+  {
+    "date": "2026-11-17",
+    "titre": "Maximum des Léonides",
+    "type": "Pluie d'étoiles filantes",
+    "description": "Les Léonides semblent provenir de la constellation du Lion. À observer en seconde partie de nuit."
+  },
+  {
+    "date": "2026-12-14",
+    "titre": "Maximum des Géminides",
+    "type": "Pluie d'étoiles filantes",
+    "description": "Une des plus belles pluies d'étoiles filantes de l'année. À observer loin des lumières."
+  },
+  {
+    "date": "2026-12-22",
+    "titre": "Maximum des Ursides",
+    "type": "Pluie d'étoiles filantes",
+    "description": "Une pluie d'étoiles filantes visible depuis l'hémisphère Nord."
+  },
+  {
+    "date": "2027-01-04",
+    "titre": "Maximum des Quadrantides",
+    "type": "Pluie d'étoiles filantes",
+    "description": "Une pluie parfois très intense, avec un maximum assez bref."
+  },
+  {
+    "date": "2027-02-06",
+    "titre": "Éclipse annulaire de Soleil",
+    "type": "Éclipse",
+    "description": "Éclipse annulaire visible dans certaines régions d'Amérique du Sud et d'Afrique, mais pas depuis la France métropolitaine."
+  },
+  {
+    "date": "2027-02-21",
+    "titre": "Éclipse pénombrale de Lune",
+    "type": "Éclipse",
+    "description": "Observable depuis l'Europe, mais l'assombrissement de la Lune sera très discret."
+  },
+  {
+    "date": "2027-04-22",
+    "titre": "Maximum des Lyrides",
+    "type": "Pluie d'étoiles filantes",
+    "description": "Une pluie d'étoiles filantes observable dans l'hémisphère Nord."
+  },
+  {
+    "date": "2027-05-06",
+    "titre": "Maximum des Êta Aquarides",
+    "type": "Pluie d'étoiles filantes",
+    "description": "Des météores associés à la comète de Halley. L'observation est préférable avant l'aube."
+  },
+  {
+    "date": "2027-08-02",
+    "titre": "Éclipse totale de Soleil",
+    "type": "Éclipse",
+    "description": "La totalité sera visible notamment dans le sud de l'Espagne et en Afrique du Nord. Une éclipse partielle sera visible depuis une grande partie de la France."
+  },
+  {
+    "date": "2027-08-13",
+    "titre": "Maximum des Perséides",
+    "type": "Pluie d'étoiles filantes",
+    "description": "Un grand rendez-vous annuel pour observer les étoiles filantes en été."
+  }
+]
