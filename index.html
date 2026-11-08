@@ -1,131 +1,176 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Astro Club — Rendez-vous sous les étoiles</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #081426;
-      color: #f4f6ff;
-    }
-    header {
-      padding: 55px 20px;
-      text-align: center;
-      background: linear-gradient(135deg, #172b50, #394b83);
-    }
-    h1 { font-size: 2.5em; }
-    main {
-      max-width: 850px;
-      margin: 35px auto;
-      padding: 0 20px;
-    }
-    .card {
-      background: #142541;
-      border-radius: 14px;
-      padding: 22px;
-      margin: 18px 0;
-    }
-    .event-date {
-      color: #a9c7ff;
-      font-weight: bold;
-    }
-    .event-type {
-      color: #c3cce0;
-      font-size: 0.9em;
-    }
-    footer {
-      text-align: center;
-      padding: 30px;
-      color: #aebbd3;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#091426">
+<title>Astro Club — Agenda astronomique</title>
+<style>
+:root{color-scheme:dark;--bg:#081426;--panel:#11233d;--panel2:#172d4c;--line:#29415f;--text:#edf3ff;--muted:#aebdd3;--accent:#9bc4ff;--gold:#f1cc7a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+header{padding:22px max(18px,calc((100% - 1120px)/2));background:linear-gradient(110deg,#142b4d,#263d69);border-bottom:1px solid var(--line)}
+.brand{font-size:1.45rem;font-weight:800;letter-spacing:.02em}
+.sub{color:#d3def1;font-size:.9rem}
+main{max-width:1120px;margin:auto;padding:22px 18px 60px}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:14px 0 22px}
+input,select,button{font:inherit;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+button{cursor:pointer}
+button:hover,.monthnav button:hover{background:var(--panel2)}
+input{flex:1;min-width:190px}
+h1,h2,h3,p{margin-top:0}
+h1{font-size:1.65rem;margin-bottom:5px}
+h2{font-size:1.15rem;margin:0 0 12px}
+.muted{color:var(--muted)}
+.section{margin:25px 0}
+.pills{display:flex;gap:8px;flex-wrap:wrap}
+.pill{font-size:.78rem;border:1px solid var(--line);padding:3px 9px;border-radius:99px;color:var(--muted)}
+.eventlist{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.event{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.event summary{cursor:pointer;padding:15px 16px;list-style:none}
+.event summary::-webkit-details-marker{display:none}
+.event summary:hover{background:var(--panel2)}
+.event summary:after{content:"＋";float:right;color:var(--accent);font-weight:700}
+.event[open] summary:after{content:"−"}
+.event h3{font-size:1rem;margin:0 28px 5px 0}
+.event .date{color:var(--accent);font-weight:650;font-size:.88rem}
+.event .body{padding:0 16px 16px;border-top:1px solid var(--line)}
+.event .body p{margin:12px 0}
+.event a{color:var(--accent)}
+.calendarbox{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+.monthnav{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.monthnav strong{text-transform:capitalize}
+.monthnav button{padding:7px 12px}
+.calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.weekday,.day{min-width:0;text-align:center}
+.weekday{color:var(--muted);font-size:.76rem;padding:5px 0}
+.day{min-height:66px;border:1px solid var(--line);border-radius:8px;background:#0c1c32;padding:5px 2px;display:flex;flex-direction:column;align-items:center;gap:3px}
+.day.empty{border-color:transparent;background:transparent}
+.day.today{outline:1px solid var(--gold)}
+.day.has{border-color:#6489bd;background:#152d4c}
+.day button{border:0;background:transparent;padding:0;width:100%;height:100%;cursor:pointer}
+.daynum{font-size:.82rem}
+.dots{display:flex;gap:3px;justify-content:center;flex-wrap:wrap}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--gold)}
+.day.selected{box-shadow:inset 0 0 0 2px var(--accent)}
+.legend{display:flex;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:.8rem;margin-top:10px}
+.emptymsg{padding:16px;color:var(--muted);background:var(--panel);border-radius:12px}
+footer{border-top:1px solid var(--line);padding:20px;text-align:center;color:var(--muted);font-size:.82rem}
+@media(max-width:520px){main{padding:16px 12px 40px}.day{min-height:55px}.calendar{gap:3px}.weekday{font-size:.68rem}}
+</style>
 </head>
 <body>
-  <header>
-    <h1>🔭 Astro Club</h1>
-    <p>Rendez-vous sous les étoiles</p>
-  </header>
-
-  <main>
-    <section class="card">
-      <h2>Bienvenue au club !</h2>
-      <p>Retrouvons-nous pour observer, découvrir et partager les merveilles du ciel.</p>
-    </section>
-
-    <h2>🌌 Les prochains événements célestes</h2>
-    <div id="evenements">
-      <p>Chargement du calendrier...</p>
+<header>
+  <div class="brand">🔭 ASTRO CLUB <span style="font-weight:400">/ Agenda</span></div>
+  <div class="sub">Événements célestes · Référence locale : Les Herbiers (Vendée)</div>
+</header>
+<main>
+  <section class="section">
+    <h1>Agenda astronomique</h1>
+    <div class="muted">Les prochains phénomènes à observer, en France et lors de déplacements proches.</div>
+    <div class="toolbar">
+      <input id="search" type="search" placeholder="Rechercher un événement…">
+      <select id="category"><option value="">Toutes les catégories</option></select>
+      <select id="scope"><option value="">France + voyages</option><option value="france">Visible depuis la France</option><option value="voyage">Déplacement à prévoir</option></select>
     </div>
-  </main>
+  </section>
 
-  <footer>Astro Club — La tête dans les étoiles ✨</footer>
+  <section class="section">
+    <h2>À venir</h2>
+    <div id="upcoming" class="eventlist"><div class="emptymsg">Chargement…</div></div>
+  </section>
 
-  <script>
-    async function chargerEvenements() {
-      const zone = document.getElementById("evenements");
+  <section class="section">
+    <h2>Calendrier mensuel</h2>
+    <div class="calendarbox">
+      <div class="monthnav">
+        <button id="prev" aria-label="Mois précédent">←</button>
+        <strong id="monthTitle"></strong>
+        <button id="next" aria-label="Mois suivant">→</button>
+      </div>
+      <div class="calendar" id="calendar"></div>
+      <div class="legend"><span>● Un ou plusieurs événements</span><span>Contour doré : aujourd'hui</span></div>
+    </div>
+    <div id="selectedDay" style="margin-top:12px"></div>
+  </section>
 
-      try {
-        const reponse = await fetch("data/evenements.json");
-        if (!reponse.ok) throw new Error("Calendrier introuvable");
-
-        const evenements = await reponse.json();
-        const aujourdHui = new Date();
-        aujourdHui.setHours(0, 0, 0, 0);
-
-        const prochains = evenements
-          .filter(e => {
-            const date = new Date(e.date + "T00:00:00");
-            return !isNaN(date) && date >= aujourdHui;
-          })
-          .sort((a, b) => a.date.localeCompare(b.date));
-
-        zone.replaceChildren();
-
-        if (prochains.length === 0) {
-          zone.textContent = "Aucun événement à venir pour le moment.";
-          return;
-        }
-
-        prochains.forEach(e => {
-          const carte = document.createElement("article");
-          carte.className = "card";
-
-          const date = new Date(e.date + "T00:00:00");
-          const dateTexte = date.toLocaleDateString("fr-FR", {
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-            year: "numeric"
-          });
-
-          const titre = document.createElement("h3");
-          titre.textContent = e.titre;
-
-          const dateElement = document.createElement("p");
-          dateElement.className = "event-date";
-          dateElement.textContent = "📅 " + dateTexte;
-
-          const type = document.createElement("p");
-          type.className = "event-type";
-          type.textContent = e.type;
-
-          const description = document.createElement("p");
-          description.textContent = e.description;
-
-          carte.append(titre, dateElement, type, description);
-          zone.appendChild(carte);
-        });
-      } catch (erreur) {
-        zone.textContent =
-          "Impossible de charger le calendrier. Vérifiez le fichier des événements.";
-      }
-    }
-
-    chargerEvenements();
-  </script>
+  <section class="section">
+    <h2>Tous les événements filtrés</h2>
+    <div id="allEvents" class="eventlist"></div>
+  </section>
+  <p class="muted" style="font-size:.8rem">Les horaires locaux et la visibilité dépendent du lieu exact, de l'horizon et de la météo. Les indications marquées « à confirmer » ne doivent pas être utilisées comme horaires de rendez-vous. Pour le Soleil, utiliser exclusivement une protection adaptée certifiée.</p>
+</main>
+<footer>Astro Club · Agenda d'observation · Données à vérifier avant chaque sortie</footer>
+<script>
+const DATA_URL = "data/evenements.json";
+let events = [];
+let month = new Date(); month = new Date(month.getFullYear(), month.getMonth(), 1);
+let selectedDate = null;
+const $ = id => document.getElementById(id);
+const fmt = s => new Date(s+"T12:00:00").toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"});
+const monthFmt = d => d.toLocaleDateString("fr-FR",{month:"long",year:"numeric"});
+function eventMatches(e){
+ const q=$("search").value.trim().toLocaleLowerCase("fr");
+ const cat=$("category").value, scope=$("scope").value;
+ return (!cat||e.category===cat)&&(!scope||e.scope===scope)&&(!q||(e.title+" "+e.summary+" "+e.category).toLocaleLowerCase("fr").includes(q));
+}
+function card(e){
+ const d=document.createElement("details"); d.className="event";
+ const s=document.createElement("summary");
+ const h=document.createElement("h3"); h.textContent=e.title;
+ const date=document.createElement("div"); date.className="date";
+ date.textContent=fmt(e.date)+(e.endDate?" – "+fmt(e.endDate):"");
+ const tags=document.createElement("div"); tags.className="pills";
+ [e.category,e.scope==="voyage"?"Déplacement":"France",e.visibility].forEach(t=>{const p=document.createElement("span");p.className="pill";p.textContent=t;tags.append(p)});
+ s.append(h,date,tags);
+ const b=document.createElement("div");b.className="body";
+ const summary=document.createElement("p");summary.textContent=e.summary;
+ const details=document.createElement("p");details.textContent=e.details;
+ const where=document.createElement("p");where.innerHTML="<strong>Où regarder :</strong> ";where.append(document.createTextNode(e.where));
+ const time=document.createElement("p");time.innerHTML="<strong>Quand :</strong> ";time.append(document.createTextNode(e.time));
+ const gear=document.createElement("p");gear.innerHTML="<strong>Matériel :</strong> ";gear.append(document.createTextNode(e.equipment));
+ const source=document.createElement("p");const a=document.createElement("a");a.href=e.source;a.target="_blank";a.rel="noopener noreferrer";a.textContent="Source astronomique";source.append(a);
+ b.append(summary,details,where,time,gear,source);d.append(s,b);return d;
+}
+function render(){
+ const filtered=events.filter(eventMatches).sort((a,b)=>a.date.localeCompare(b.date));
+ const today=new Date();today.setHours(0,0,0,0);
+ const upcoming=filtered.filter(e=>new Date((e.endDate||e.date)+"T23:59:59")>=today).slice(0,6);
+ $("upcoming").replaceChildren(...(upcoming.length?upcoming.map(card):[Object.assign(document.createElement("div"),{className:"emptymsg",textContent:"Aucun événement à venir avec ces filtres."})]));
+ $("allEvents").replaceChildren(...(filtered.length?filtered.map(card):[Object.assign(document.createElement("div"),{className:"emptymsg",textContent:"Aucun événement correspondant."})]));
+ renderCalendar(filtered);
+}
+function renderCalendar(filtered){
+ $("monthTitle").textContent=monthFmt(month);
+ const root=$("calendar");root.replaceChildren();
+ ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"].forEach(x=>{const el=document.createElement("div");el.className="weekday";el.textContent=x;root.append(el)});
+ const first=new Date(month.getFullYear(),month.getMonth(),1);
+ const offset=(first.getDay()+6)%7;
+ const count=new Date(month.getFullYear(),month.getMonth()+1,0).getDate();
+ for(let i=0;i<offset;i++){const e=document.createElement("div");e.className="day empty";root.append(e)}
+ for(let n=1;n<=count;n++){
+  const date=new Date(month.getFullYear(),month.getMonth(),n);
+  const key=[date.getFullYear(),String(date.getMonth()+1).padStart(2,"0"),String(n).padStart(2,"0")].join("-");
+  const dayEvents=filtered.filter(e=>e.date<=key&&(e.endDate||e.date)>=key);
+  const cell=document.createElement("div");cell.className="day"+(dayEvents.length?" has":"");
+  if(key===new Date().toLocaleDateString("en-CA"))cell.classList.add("today");
+  if(selectedDate===key)cell.classList.add("selected");
+  const btn=document.createElement("button");btn.type="button";btn.setAttribute("aria-label",fmt(key)+(dayEvents.length?", événements disponibles":""));
+  const num=document.createElement("div");num.className="daynum";num.textContent=n;btn.append(num);
+  if(dayEvents.length){const dots=document.createElement("div");dots.className="dots";dayEvents.slice(0,4).forEach(()=>{const dot=document.createElement("i");dot.className="dot";dots.append(dot)});btn.append(dots)}
+  btn.addEventListener("click",()=>{selectedDate=key;renderCalendar(filtered);const matches=filtered.filter(e=>e.date<=key&&(e.endDate||e.date)>=key);$("selectedDay").replaceChildren();const title=document.createElement("h3");title.textContent=fmt(key);$("selectedDay").append(title);if(!matches.length){const p=document.createElement("p");p.className="muted";p.textContent="Aucun événement enregistré ce jour-là."; $("selectedDay").append(p)}else matches.forEach(e=>$("selectedDay").append(card(e)))});
+  cell.append(btn);root.append(cell);
+ }
+ while(root.children.length<49){const e=document.createElement("div");e.className="day empty";root.append(e)}
+}
+$("prev").addEventListener("click",()=>{month=new Date(month.getFullYear(),month.getMonth()-1,1);render()});
+$("next").addEventListener("click",()=>{month=new Date(month.getFullYear(),month.getMonth()+1,1);render()});
+["search","category","scope"].forEach(id=>$(id).addEventListener(id==="search"?"input":"change",()=>{selectedDate=null;render()}));
+fetch(DATA_URL).then(r=>{if(!r.ok)throw Error("Fichier introuvable");return r.json()}).then(data=>{
+ events=data;
+ [...new Set(events.map(e=>e.category))].sort().forEach(c=>{const o=document.createElement("option");o.value=c;o.textContent=c;$("category").append(o)});
+ render();
+}).catch(()=>{$("upcoming").textContent="Impossible de charger le calendrier. Vérifie data/evenements.json.";});
+</script>
 </body>
 </html>
