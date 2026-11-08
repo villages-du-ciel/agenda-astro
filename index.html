@@ -11,21 +11,37 @@
       font-family: Arial, sans-serif;
       background: #081426;
       color: #f4f6ff;
-      text-align: center;
     }
     header {
-      padding: 65px 20px;
+      padding: 55px 20px;
+      text-align: center;
       background: linear-gradient(135deg, #172b50, #394b83);
     }
-    h1 { font-size: 2.5em; margin-bottom: 12px; }
-    main { max-width: 850px; margin: 40px auto; padding: 0 20px; }
+    h1 { font-size: 2.5em; }
+    main {
+      max-width: 850px;
+      margin: 35px auto;
+      padding: 0 20px;
+    }
     .card {
       background: #142541;
       border-radius: 14px;
-      padding: 25px;
-      margin: 20px 0;
+      padding: 22px;
+      margin: 18px 0;
     }
-    footer { padding: 30px; color: #aebbd3; }
+    .event-date {
+      color: #a9c7ff;
+      font-weight: bold;
+    }
+    .event-type {
+      color: #c3cce0;
+      font-size: 0.9em;
+    }
+    footer {
+      text-align: center;
+      padding: 30px;
+      color: #aebbd3;
+    }
   </style>
 </head>
 <body>
@@ -35,24 +51,81 @@
   </header>
 
   <main>
-    <div class="card">
+    <section class="card">
       <h2>Bienvenue au club !</h2>
-      <p>Retrouvons-nous pour observer, découvrir et partager
-      les merveilles du ciel.</p>
-    </div>
+      <p>Retrouvons-nous pour observer, découvrir et partager les merveilles du ciel.</p>
+    </section>
 
-    <div class="card">
-      <h2>🌌 Les prochains événements célestes</h2>
-      <p>Notre calendrier astronomique arrive bientôt !</p>
-    </div>
-
-    <div class="card">
-      <h2>📅 Préparez vos observations</h2>
-      <p>Les événements importants et les rappels du club
-      seront bientôt disponibles ici.</p>
+    <h2>🌌 Les prochains événements célestes</h2>
+    <div id="evenements">
+      <p>Chargement du calendrier...</p>
     </div>
   </main>
 
   <footer>Astro Club — La tête dans les étoiles ✨</footer>
+
+  <script>
+    async function chargerEvenements() {
+      const zone = document.getElementById("evenements");
+
+      try {
+        const reponse = await fetch("data/evenements.json");
+        if (!reponse.ok) throw new Error("Calendrier introuvable");
+
+        const evenements = await reponse.json();
+        const aujourdHui = new Date();
+        aujourdHui.setHours(0, 0, 0, 0);
+
+        const prochains = evenements
+          .filter(e => {
+            const date = new Date(e.date + "T00:00:00");
+            return !isNaN(date) && date >= aujourdHui;
+          })
+          .sort((a, b) => a.date.localeCompare(b.date));
+
+        zone.replaceChildren();
+
+        if (prochains.length === 0) {
+          zone.textContent = "Aucun événement à venir pour le moment.";
+          return;
+        }
+
+        prochains.forEach(e => {
+          const carte = document.createElement("article");
+          carte.className = "card";
+
+          const date = new Date(e.date + "T00:00:00");
+          const dateTexte = date.toLocaleDateString("fr-FR", {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+            year: "numeric"
+          });
+
+          const titre = document.createElement("h3");
+          titre.textContent = e.titre;
+
+          const dateElement = document.createElement("p");
+          dateElement.className = "event-date";
+          dateElement.textContent = "📅 " + dateTexte;
+
+          const type = document.createElement("p");
+          type.className = "event-type";
+          type.textContent = e.type;
+
+          const description = document.createElement("p");
+          description.textContent = e.description;
+
+          carte.append(titre, dateElement, type, description);
+          zone.appendChild(carte);
+        });
+      } catch (erreur) {
+        zone.textContent =
+          "Impossible de charger le calendrier. Vérifiez le fichier des événements.";
+      }
+    }
+
+    chargerEvenements();
+  </script>
 </body>
 </html>
