@@ -149,9 +149,18 @@ def eclipse_events(years, today):
                         title = "Éclipse totale de Lune"
                     else:
                         raise RuntimeError(f"Type d'éclipse lunaire inconnu : {row.get('type')}")
-                    scope = "france"
-                    visibility = "Visibilité depuis la France à confirmer avec les circonstances locales et la hauteur de la Lune."
-                    where = "Lune ; choisir un horizon dégagé."
+                    if day.isoformat() == "2027-02-20":
+                        scope = "france"
+                        visibility = "Visible depuis la France métropolitaine ; assombrissement pénombral discret, surtout autour du maximum."
+                        where = "Lune ; choisir un horizon dégagé."
+                    elif day.isoformat() in ("2027-07-18", "2027-08-17"):
+                        scope = "voyage"
+                        visibility = "Non visible depuis la France métropolitaine ; la Lune est sous l’horizon pendant le phénomène."
+                        where = "Phénomène visible dans d’autres régions du monde ; consulter la carte officielle avant tout déplacement."
+                    else:
+                        scope = "voyage"
+                        visibility = "Visibilité depuis la France non confirmée ; vérifier les circonstances locales et la hauteur de la Lune."
+                        where = "Lune ; choisir un horizon dégagé dans une région où le phénomène est visible."
                     equipment = "Œil nu ; jumelles facultatives."
                     tips = "Une éclipse pénombrale est discrète et peut être difficile à distinguer à l’œil nu."
 
