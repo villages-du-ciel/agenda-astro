@@ -264,24 +264,5 @@
     "equipment": "Observation à l’œil nu ; aucun instrument nécessaire.",
     "tips": "S’éloigner des éclairages et laisser les yeux s’adapter à l’obscurité.",
     "source": "https://www.imo.net/calendar/"
-  },
-  {
-    "date": "2027-08-12",
-    "endDate": "2027-08-13",
-    "title": "Maximum des Perséides",
-    "category": "Pluie d’étoiles filantes",
-    "scope": "france",
-    "visibility": "Observable selon la hauteur du radiant, l’horizon, la Lune et la météo ; conditions locales à vérifier depuis Les Herbiers.",
-    "summary": "Maximum annoncé par l’International Meteor Organization pour les Perséides. L’activité réellement observée dépend des conditions du ciel.",
-    "details": "Consulter le calendrier IMO pour la période d’activité et les particularités de cette pluie.",
-    "time": "Nuit du maximum ; heure précise à vérifier dans le calendrier IMO.",
-    "where": "Observer une large portion du ciel depuis un endroit sombre.",
-    "direction": "Direction et hauteur du radiant à vérifier pour l’heure d’observation depuis Les Herbiers.",
-    "altitude": "Non calculée automatiquement.",
-    "moon": "Conditions lunaires à vérifier dans le calendrier IMO.",
-    "weather": "Vérifier les prévisions près des Herbiers le jour même.",
-    "equipment": "Observation à l’œil nu ; aucun instrument nécessaire.",
-    "tips": "S’éloigner des éclairages et laisser les yeux s’adapter à l’obscurité.",
-    "source": "https://www.imo.net/calendar/"
   }
 ]
