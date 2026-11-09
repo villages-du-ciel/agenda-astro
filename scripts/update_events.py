@@ -1,21 +1,26 @@
 #!/usr/bin/env python3
-"""Importe les maxima de pluies de météores depuis le calendrier IMO."""
+"""Actualise l'agenda avec l'IMO et l'API officielle OPALE de l'IMCCE.
+
+Le script échoue sans modifier le JSON si une source est indisponible ou
+si sa structure ne correspond plus aux données attendues.
+"""
 import json
 import re
 import sys
-from datetime import date
+from datetime import date, datetime, timezone
 from pathlib import Path
+from urllib.parse import urlencode
 from urllib.request import Request, urlopen
+from zoneinfo import ZoneInfo
 
 from bs4 import BeautifulSoup
 
-SOURCE = "https://www.imo.net/calendar/"
+IMO_URL = "https://www.imo.net/calendar/"
+OPALE = "https://opale.imcce.fr/api/v1/phenomena"
 DATA_FILE = Path("data/evenements.json")
-MONTHS = {
-    "jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6,
-    "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12,
-}
-NAMES = {
+PARIS = ZoneInfo("Europe/Paris")
+
+SHOWER_NAMES = {
     "Leonids": "Léonides",
     "Geminids": "Géminides",
     "Ursids": "Ursides",
@@ -29,102 +34,260 @@ NAMES = {
     "Southern Taurids": "Taurides du Sud",
     "Northern Taurids": "Taurides du Nord",
 }
+MONTHS = {
+    "jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6,
+    "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12,
+}
+PHASES = {
+    "NewMoon": "Nouvelle Lune",
+    "FirstQuarter": "Premier quartier",
+    "FullMoon": "Pleine Lune",
+    "LastQuarter": "Dernier quartier",
+}
 
 
-def fetch_text():
-    request = Request(
-        SOURCE,
-        headers={"User-Agent": "AstroClubAgenda/1.2 (astronomy calendar updater)"},
+def get_json(url):
+    request = Request(url, headers={"User-Agent": "AstroClubAgenda/2.0"})
+    with urlopen(request, timeout=45) as response:
+        return json.loads(response.read().decode("utf-8"))
+
+
+def local_datetime(value):
+    # OPALE renvoie des instants UTC sans suffixe Z.
+    instant = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    if instant.tzinfo is None:
+        instant = instant.replace(tzinfo=timezone.utc)
+    return instant.astimezone(PARIS)
+
+
+def future_peak(block, today):
+    match = re.search(
+        r"PEAK\s*NIGHT\s*:?[\s\u00a0]*(\d{1,2})\s*[–—-]\s*"
+        r"(\d{1,2})\s+([A-Za-z]{3})",
+        block,
+        re.IGNORECASE,
     )
-    with urlopen(request, timeout=30) as response:
-        soup = BeautifulSoup(response.read(), "html.parser")
-    return " ".join(soup.get_text(" ", strip=True).split())
-
-
-def extract_peak_date(segment, today):
-    peak = re.search(r"PEAK\s*NIGHT\s*:?\s*(.{0,100})", segment, re.IGNORECASE)
-    if not peak:
+    if not match:
         return None
-
-    # Formats pris en charge : "Nov 17/18", "Nov 17–18", "17 Nov", "17–18 Nov".
-    text = peak.group(1)
-    patterns = [
-        r"\b([A-Za-z]{3})\s+(\d{1,2})(?:\s*[/–-]\s*\d{1,2})?",
-        r"\b(\d{1,2})(?:\s*[/–-]\s*\d{1,2})?\s+([A-Za-z]{3})\b",
-    ]
-    parsed = None
-    for index, pattern in enumerate(patterns):
-        match = re.search(pattern, text)
-        if not match:
-            continue
-        month_text, day_text = (match.group(1), match.group(2)) if index == 0 else (match.group(2), match.group(1))
-        month = MONTHS.get(month_text.lower())
-        if month:
-            parsed = (int(day_text), month)
-            break
-    if parsed is None:
+    day = int(match.group(1))
+    month = MONTHS.get(match.group(3).lower())
+    if not month:
         return None
-
-    day, month = parsed
-    year = today.year if month >= today.month else today.year + 1
+    year = today.year
     try:
-        result = date(year, month, day)
+        peak = date(year, month, day)
     except ValueError:
         return None
-    return result if result >= today else None
+    if peak < today:
+        try:
+            peak = date(year + 1, month, day)
+        except ValueError:
+            return None
+    return peak
 
 
-def build_events(page_text, today):
-    # Cherche les noms dans le texte complet, pas dans des balises HTML précises :
-    # le site IMO peut modifier sa mise en page sans casser l'import.
-    occurrences = []
-    for english_name in sorted(NAMES, key=len, reverse=True):
-        for match in re.finditer(r"\b" + re.escape(english_name) + r"\b", page_text, re.IGNORECASE):
-            occurrences.append((match.start(), match.end(), english_name))
-    occurrences.sort()
+def meteor_events(today):
+    request = Request(IMO_URL, headers={"User-Agent": "AstroClubAgenda/2.0"})
+    with urlopen(request, timeout=45) as response:
+        soup = BeautifulSoup(response.read(), "html.parser")
 
     generated = []
-    seen = set()
-    for position, (start, end, english_name) in enumerate(occurrences):
-        next_start = occurrences[position + 1][0] if position + 1 < len(occurrences) else min(len(page_text), end + 1200)
-        # Une même pluie peut être mentionnée plusieurs fois : on ne retient que
-        # le segment où se trouve effectivement l'indication « Peak night ».
-        segment = page_text[start:next_start]
-        peak_date = extract_peak_date(segment, today)
-        if peak_date is None:
+    for english, french in SHOWER_NAMES.items():
+        heading = soup.find(
+            lambda tag: tag.name in ("h1", "h2", "h3", "h4")
+            and tag.get_text(" ", strip=True).casefold() == english.casefold()
+        )
+        if heading is None:
             continue
 
-        french_name = NAMES[english_name]
-        title = "Maximum des " + french_name
-        key = (title, peak_date.isoformat())
-        if key in seen:
+        block = ""
+        parent = heading
+        for _ in range(6):
+            parent = parent.parent
+            if parent is None:
+                break
+            candidate = " ".join(parent.get_text(" ", strip=True).split())
+            if re.search(r"PEAK\s*NIGHT", candidate, re.IGNORECASE):
+                block = candidate
+                break
+        if not block:
             continue
-        seen.add(key)
 
+        peak = future_peak(block, today)
+        if peak is None:
+            continue
         generated.append({
-            "date": peak_date.isoformat(),
+            "date": peak.isoformat(),
             "endDate": None,
-            "title": title,
+            "title": "Maximum des " + french,
             "category": "Pluie d’étoiles filantes",
             "scope": "france",
-            "visibility": "Observable selon la hauteur du radiant, l’horizon, la Lune et la météo ; conditions locales à vérifier depuis Les Herbiers.",
-            "summary": f"Maximum annoncé par l’International Meteor Organization pour les {french_name}. L’activité réellement observée dépend des conditions du ciel.",
-            "details": "Consulter le calendrier IMO pour la période d’activité et les particularités de cette pluie.",
-            "time": "Nuit du maximum ; heure précise à vérifier dans le calendrier IMO.",
+            "visibility": "Pluie observable depuis la France si le radiant est au-dessus de l’horizon ; le nombre de météores dépend du ciel, de la Lune et de la météo.",
+            "summary": f"Maximum annoncé par l’International Meteor Organization pour les {french}.",
+            "details": "Le maximum est une période d’activité accrue, pas une garantie d’observer un nombre précis de météores. Consulter la source pour les mises à jour.",
+            "time": "Nuit indiquée par l’IMO ; vérifier les heures locales et la hauteur du radiant avant la sortie.",
             "where": "Observer une large portion du ciel depuis un endroit sombre.",
-            "direction": "Direction et hauteur du radiant à vérifier pour l’heure d’observation depuis Les Herbiers.",
+            "direction": "Regarder la zone la plus dégagée du ciel ; le radiant n’est pas la seule zone où apparaissent les météores.",
             "altitude": "Non calculée automatiquement.",
-            "moon": "Conditions lunaires à vérifier dans le calendrier IMO.",
-            "weather": "Vérifier les prévisions près des Herbiers le jour même.",
+            "moon": "Consulter la phase lunaire correspondante dans l’agenda.",
+            "weather": "Vérifier les prévisions locales près des Herbiers le jour même.",
             "equipment": "Observation à l’œil nu ; aucun instrument nécessaire.",
-            "tips": "S’éloigner des éclairages et laisser les yeux s’adapter à l’obscurité.",
-            "source": SOURCE,
+            "tips": "S’éloigner des éclairages et laisser les yeux s’adapter à l’obscurité pendant 20 à 30 minutes.",
+            "source": IMO_URL,
         })
 
-    return sorted(generated, key=lambda event: event["date"])
+    # L'absence de quelques petites pluies est possible, mais une page presque
+    # vide indique généralement un changement de structure : on n'écrase rien.
+    if len(generated) < 3:
+        raise RuntimeError(
+            f"Seulement {len(generated)} maxima futurs lus sur l'IMO ; "
+            "mise à jour annulée pour protéger les données existantes."
+        )
+    return generated
+
+
+def moon_events(years, today):
+    generated = []
+    for year in years:
+        url = OPALE + "/moonphases?" + urlencode({
+            "year": year, "calendar": "gregorian", "timescale": "UTC"
+        })
+        payload = get_json(url)
+        rows = payload.get("response", {}).get("data", [])
+        if not isinstance(rows, list) or len(rows) < 40:
+            raise RuntimeError(f"Réponse OPALE incomplète pour les phases lunaires {year}.")
+        for row in rows:
+            phase = PHASES.get(row.get("moonPhase"))
+            if not phase or not row.get("date"):
+                continue
+            local = local_datetime(row["date"])
+            if local.date() < today:
+                continue
+            generated.append({
+                "date": local.date().isoformat(),
+                "endDate": None,
+                "title": phase,
+                "category": "Phase de la Lune",
+                "scope": "france",
+                "visibility": "Phase astronomique observable depuis la France si la Lune est au-dessus de l’horizon et si le ciel est dégagé.",
+                "summary": f"{phase} à {local:%H:%M} (heure de Paris).",
+                "details": "Instant calculé par l’IMCCE. L’aspect de la Lune évolue autour de cet instant ; ce n’est pas une durée d’observation.",
+                "time": f"{local:%H:%M} — heure locale de Paris (conversion depuis UTC).",
+                "where": "Observer la Lune si elle est au-dessus de l’horizon.",
+                "direction": "Dépend de l’heure et de la position de la Lune ; non calculée ici.",
+                "altitude": "Non calculée automatiquement.",
+                "moon": phase,
+                "weather": "Vérifier la couverture nuageuse locale.",
+                "equipment": "Œil nu ; jumelles ou télescope facultatifs.",
+                "tips": "La nouvelle Lune est difficile à observer dans l’éclat du Soleil ; ne jamais pointer un instrument vers le Soleil sans filtre solaire adapté.",
+                "source": "https://opale.imcce.fr/webservices/api.html",
+            })
+    if not generated:
+        raise RuntimeError("Aucune phase lunaire future reçue depuis OPALE.")
+    return generated
+
+
+def find_eclipse_rows(value):
+    found = []
+    if isinstance(value, dict):
+        if isinstance(value.get("calendarDate"), str) and isinstance(value.get("events"), dict):
+            found.append(value)
+        else:
+            for child in value.values():
+                found.extend(find_eclipse_rows(child))
+    elif isinstance(value, list):
+        for child in value:
+            found.extend(find_eclipse_rows(child))
+    return found
+
+
+def eclipse_events(years, today):
+    generated = []
+    for year in years:
+        for body, solar in ((10, True), (301, False)):
+            url = f"{OPALE}/eclipses/{body}/{year}"
+            payload = get_json(url)
+            rows = find_eclipse_rows(payload.get("response", {}))
+            if not rows:
+                raise RuntimeError(f"Aucune éclipse reconnue dans la réponse OPALE {body}/{year}.")
+            for row in rows:
+                try:
+                    day = date.fromisoformat(row["calendarDate"])
+                except (KeyError, ValueError):
+                    raise RuntimeError("Date d'éclipse invalide dans la réponse OPALE.")
+                if day < today:
+                    continue
+                kind = str(row.get("type", "")).lower()
+                if solar:
+                    if "annular" in kind:
+                        title = "Éclipse annulaire de Soleil"
+                    elif "total" in kind:
+                        title = "Éclipse totale de Soleil"
+                    elif "partial" in kind:
+                        title = "Éclipse partielle de Soleil"
+                    else:
+                        raise RuntimeError(f"Type d'éclipse solaire inconnu : {row.get('type')}")
+                    if day.isoformat() == "2027-02-06":
+                        scope = "voyage"
+                        visibility = "Non visible depuis la France métropolitaine ; la zone annulaire se situe dans l’hémisphère Sud."
+                        where = "Trajectoire à consulter sur la carte officielle de l’IMCCE/NASA."
+                    elif day.isoformat() == "2027-08-02":
+                        scope = "france"
+                        visibility = "Éclipse partielle depuis la France ; totalité dans une bande traversant notamment le sud de l’Espagne et l’Afrique du Nord."
+                        where = "Depuis la France : phase partielle. Pour la totalité, choisir un site précisément situé dans la bande de totalité."
+                    else:
+                        scope = "voyage"
+                        visibility = "Zone de visibilité à vérifier sur la carte officielle pour le lieu d’observation."
+                        where = "Trajectoire à consulter sur la carte officielle de l’IMCCE."
+                    equipment = "Filtre solaire certifié indispensable pendant toutes les phases partielles et annulaires. Ne jamais regarder le Soleil sans protection adaptée."
+                    tips = "Vérifier les circonstances locales et la trajectoire officielle avant tout déplacement."
+                else:
+                    if "penumbral" in kind:
+                        title = "Éclipse pénombrale de Lune"
+                    elif "partial" in kind:
+                        title = "Éclipse partielle de Lune"
+                    elif "total" in kind:
+                        title = "Éclipse totale de Lune"
+                    else:
+                        raise RuntimeError(f"Type d'éclipse lunaire inconnu : {row.get('type')}")
+                    scope = "france"
+                    visibility = "Visibilité depuis la France à confirmer avec les circonstances locales et la hauteur de la Lune."
+                    where = "Lune ; choisir un horizon dégagé."
+                    equipment = "Œil nu ; jumelles facultatives."
+                    tips = "Une éclipse pénombrale est discrète et peut être difficile à distinguer à l’œil nu."
+
+                greatest = row.get("events", {}).get("greatest", {}).get("date")
+                local_time = local_datetime(greatest) if greatest else None
+                event_date = local_time.date() if local_time else day
+                time_text = (
+                    f"Maximum à {local_time:%H:%M} (heure de Paris), calcul global ; "
+                    "les circonstances locales peuvent différer."
+                    if local_time else "Horaires locaux à consulter dans les circonstances détaillées."
+                )
+                generated.append({
+                    "date": event_date.isoformat(),
+                    "endDate": None,
+                    "title": title,
+                    "category": "Éclipse",
+                    "scope": scope,
+                    "visibility": visibility,
+                    "summary": f"{title} le {event_date.strftime('%d/%m/%Y')}.",
+                    "details": "Éphéméride calculée par l’IMCCE (service OPALE). Vérifier la carte de visibilité et les circonstances locales avant observation ou déplacement.",
+                    "time": time_text,
+                    "where": where,
+                    "direction": "Dépend du lieu et de l’heure ; ne pas déduire une direction sans circonstances locales.",
+                    "altitude": "Non calculée pour le site d’observation.",
+                    "moon": "La Lune est l’astre occultant ou occulté selon le phénomène.",
+                    "weather": "Vérifier les prévisions météorologiques du site choisi.",
+                    "equipment": equipment,
+                    "tips": tips,
+                    "source": "https://opale.imcce.fr/webservices/api.html",
+                })
+    return generated
 
 
 def main():
+    today = date.today()
     if not DATA_FILE.exists():
         raise SystemExit(f"Fichier introuvable : {DATA_FILE}")
     with DATA_FILE.open(encoding="utf-8") as stream:
@@ -132,29 +295,38 @@ def main():
     if not isinstance(current, list):
         raise SystemExit("Le fichier JSON doit contenir une liste d'événements.")
 
-    page_text = fetch_text()
-    generated = build_events(page_text, date.today())
-    if len(generated) < 4:
-        raise SystemExit(
-            f"Seulement {len(generated)} maxima futurs reconnus dans la page IMO ; "
-            "aucune modification effectuée. Vérifier la structure de la source."
-        )
+    # Toutes les sources sont téléchargées et validées avant de toucher au fichier.
+    generated_meteors = meteor_events(today)
+    generated_moons = moon_events((today.year, today.year + 1), today)
+    generated_eclipses = eclipse_events((today.year, today.year + 1), today)
 
-    generated_titles = {event["title"] for event in generated}
-    other_events = [
-        event for event in current
-        if event.get("category") != "Pluie d’étoiles filantes"
-        and event.get("title") not in generated_titles
-    ]
-    merged = other_events + generated
-    merged.sort(key=lambda event: event.get("date", "9999-12-31"))
-    DATA_FILE.write_text(
-        json.dumps(merged, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
-    )
+    automatic_categories = {
+        "Pluie d’étoiles filantes", "Phase de la Lune", "Éclipse"
+    }
+    manual = [e for e in current if e.get("category") not in automatic_categories]
+    merged = manual + generated_meteors + generated_moons + generated_eclipses
+    merged.sort(key=lambda e: (e.get("date", "9999-12-31"), e.get("title", "")))
+
+    # Contrôle final minimal avant écriture atomique.
+    required = ("date", "title", "category", "scope", "summary")
+    seen = set()
+    for event in merged:
+        if any(not isinstance(event.get(key), str) or not event[key].strip() for key in required):
+            raise RuntimeError(f"Événement incomplet : {event.get('title', 'sans titre')}")
+        date.fromisoformat(event["date"])
+        key = (event["date"], event["title"])
+        if key in seen:
+            raise RuntimeError(f"Doublon détecté : {key}")
+        seen.add(key)
+
+    temporary = DATA_FILE.with_suffix(".json.tmp")
+    temporary.write_text(json.dumps(merged, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    temporary.replace(DATA_FILE)
     print(
-        f"OK : {len(generated)} maxima importés depuis l'IMO ; "
-        f"{len(other_events)} autres événements conservés."
+        f"OK : {len(generated_meteors)} maxima IMO, "
+        f"{len(generated_moons)} phases lunaires IMCCE, "
+        f"{len(generated_eclipses)} éclipses IMCCE ; "
+        f"{len(manual)} événements manuels conservés."
     )
 
 
@@ -162,5 +334,5 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as error:
-        print(f"Échec de l'actualisation : {error}", file=sys.stderr)
+        print(f"Échec de l'actualisation ; aucun JSON modifié : {error}", file=sys.stderr)
         raise
