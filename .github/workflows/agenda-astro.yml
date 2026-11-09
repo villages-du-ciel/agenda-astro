@@ -1,5 +1,4 @@
-
-name: Vérification hebdomadaire de l'agenda
+name: Mise à jour automatique de l'agenda astronomique
 
 on:
   schedule:
@@ -7,17 +6,28 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  verification:
+  actualisation:
     runs-on: ubuntu-latest
-
     steps:
       - name: Récupérer les fichiers
         uses: actions/checkout@v4
 
-      - name: Vérifier les événements JSON
+      - name: Installer Python et les dépendances
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Installer les bibliothèques
+        run: python -m pip install -r requirements.txt
+
+      - name: Actualiser les pluies de météores depuis l'IMO
+        run: python scripts/update_events.py
+
+      - name: Vérifier la structure et les dates du JSON
         run: |
           python - <<'PY'
           import json
@@ -25,63 +35,50 @@ jobs:
           from datetime import date
 
           file = Path("data/evenements.json")
-
           if not file.exists():
               raise SystemExit(f"Fichier introuvable : {file}")
 
-          with file.open(encoding="utf-8") as f:
-              events = json.load(f)
+          with file.open(encoding="utf-8") as stream:
+              events = json.load(stream)
 
-          if not isinstance(events, list):
-              raise SystemExit(
-                  "Erreur : le fichier doit contenir une liste d'événements."
-              )
+          if not isinstance(events, list) or not events:
+              raise SystemExit("Le fichier doit contenir une liste non vide.")
 
-          if not events:
-              raise SystemExit("Erreur : aucun événement trouvé.")
-
-          required = [
-              "date",
-              "title",
-              "category",
-              "scope",
-              "summary"
-          ]
-
+          required = ["date", "title", "category", "scope", "summary"]
           for number, event in enumerate(events, start=1):
-
               if not isinstance(event, dict):
-                  raise SystemExit(
-                      f"Événement {number} : format incorrect."
-                  )
-
+                  raise SystemExit(f"Événement {number} : format incorrect.")
               missing = [
                   key for key in required
-                  if not isinstance(event.get(key), str)
-                  or not event.get(key).strip()
+                  if not isinstance(event.get(key), str) or not event[key].strip()
               ]
-
               if missing:
                   raise SystemExit(
-                      f"Événement {number} : champs manquants : "
-                      + ", ".join(missing)
+                      f"Événement {number} : champs manquants : {', '.join(missing)}"
                   )
-
               try:
                   date.fromisoformat(event["date"])
-              except ValueError:
+              except (TypeError, ValueError):
                   raise SystemExit(
-                      f"Événement {number} : date invalide : {event['date']}"
+                      f"Événement {number} : date invalide : {event.get('date')}"
                   )
-
               if event.get("endDate") is not None:
                   try:
                       date.fromisoformat(event["endDate"])
-                  except ValueError:
-                      raise SystemExit(
-                          f"Événement {number} : endDate invalide."
-                      )
+                  except (TypeError, ValueError):
+                      raise SystemExit(f"Événement {number} : endDate invalide.")
 
           print(f"OK : {len(events)} événements vérifiés.")
-          print("Structure et dates : valides.")
           PY
+
+      - name: Publier les modifications de l'agenda
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/evenements.json
+          if git diff --cached --quiet; then
+            echo "Aucune modification de l'agenda à publier."
+          else
+            git commit -m "Mise à jour automatique de l'agenda astronomique"
+            git push
+          fi
