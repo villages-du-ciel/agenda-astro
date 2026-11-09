@@ -199,7 +199,6 @@ def main():
         raise SystemExit("Le fichier JSON doit contenir une liste d'événements.")
 
     # Toutes les sources sont téléchargées et validées avant de toucher au fichier.
-    generated_meteors = []  # Les essaims sont conservés comme données éditoriales vérifiées.
     generated_moons = moon_events((today.year, today.year + 1), today)
     generated_eclipses = eclipse_events((today.year, today.year + 1), today)
 
@@ -207,7 +206,7 @@ def main():
         "Phase de la Lune", "Éclipse"
     }
     manual = [e for e in current if e.get("category") not in automatic_categories]
-    merged = manual + generated_meteors + generated_moons + generated_eclipses
+    merged = manual + generated_moons + generated_eclipses
     merged.sort(key=lambda e: (e.get("date", "9999-12-31"), e.get("title", "")))
 
     # Contrôle final minimal avant écriture atomique.
@@ -227,7 +226,7 @@ def main():
     temporary.replace(DATA_FILE)
     print(
         f"OK : essaims conservés, "
-        f"{len(generated_moons)} phases lunaires IMCCE, "
+        f"{len(generated_moons)} phases lunaires USNO, "
         f"{len(generated_eclipses)} éclipses IMCCE ; "
         f"{len(manual)} événements manuels conservés."
     )
