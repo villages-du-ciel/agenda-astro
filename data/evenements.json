@@ -1,7 +1,7 @@
 [
   {
-    "date": "2026-11-20",
-    "endDate": null,
+    "date": "2026-11-04",
+    "endDate": "2026-11-05",
     "title": "Maximum des Taurides du Sud",
     "category": "Pluie d’étoiles filantes",
     "scope": "france",
@@ -19,8 +19,27 @@
     "source": "https://www.imo.net/calendar/"
   },
   {
-    "date": "2026-11-20",
-    "endDate": null,
+    "date": "2026-11-11",
+    "endDate": "2026-11-12",
+    "title": "Maximum des Taurides du Nord",
+    "category": "Pluie d’étoiles filantes",
+    "scope": "france",
+    "visibility": "Pluie observable depuis la France ; activité modeste, conditions locales et hauteur du radiant à prendre en compte.",
+    "summary": "Maximum annoncé par l’International Meteor Organization pour les Taurides du Nord.",
+    "details": "Les Taurides du Nord produisent généralement peu de météores, mais peuvent offrir des bolides brillants.",
+    "time": "Nuit du 11 au 12 novembre 2026 ; vérifier les conditions locales.",
+    "where": "Observer une large portion du ciel depuis un endroit sombre.",
+    "direction": "Constellation du Taureau ; regarder une large zone du ciel, pas uniquement le radiant.",
+    "altitude": "Dépend de l’heure et du lieu ; non calculée automatiquement.",
+    "moon": "Consulter la phase lunaire correspondante dans l’agenda.",
+    "weather": "Vérifier les prévisions près des Herbiers le jour même.",
+    "equipment": "Observation à l’œil nu ; aucun instrument nécessaire.",
+    "tips": "S’éloigner des éclairages et laisser les yeux s’adapter à l’obscurité.",
+    "source": "https://www.imo.net/calendar/"
+  },
+  {
+    "date": "2026-11-16",
+    "endDate": "2026-11-17",
     "title": "Maximum des Léonides",
     "category": "Pluie d’étoiles filantes",
     "scope": "france",
@@ -38,8 +57,8 @@
     "source": "https://www.imo.net/calendar/"
   },
   {
-    "date": "2026-12-20",
-    "endDate": null,
+    "date": "2026-12-13",
+    "endDate": "2026-12-14",
     "title": "Maximum des Géminides",
     "category": "Pluie d’étoiles filantes",
     "scope": "france",
@@ -57,8 +76,8 @@
     "source": "https://www.imo.net/calendar/"
   },
   {
-    "date": "2026-12-20",
-    "endDate": null,
+    "date": "2026-12-21",
+    "endDate": "2026-12-22",
     "title": "Maximum des Ursides",
     "category": "Pluie d’étoiles filantes",
     "scope": "france",
@@ -76,8 +95,8 @@
     "source": "https://www.imo.net/calendar/"
   },
   {
-    "date": "2027-01-20",
-    "endDate": null,
+    "date": "2027-01-03",
+    "endDate": "2027-01-04",
     "title": "Maximum des Quadrantides",
     "category": "Pluie d’étoiles filantes",
     "scope": "france",
@@ -133,8 +152,8 @@
     "source": "https://eclipse.gsfc.nasa.gov/"
   },
   {
-    "date": "2027-04-20",
-    "endDate": null,
+    "date": "2027-04-21",
+    "endDate": "2027-04-22",
     "title": "Maximum des Lyrides",
     "category": "Pluie d’étoiles filantes",
     "scope": "france",
@@ -152,8 +171,8 @@
     "source": "https://www.imo.net/calendar/"
   },
   {
-    "date": "2027-05-20",
-    "endDate": null,
+    "date": "2027-05-05",
+    "endDate": "2027-05-06",
     "title": "Maximum des Êta Aquarides",
     "category": "Pluie d’étoiles filantes",
     "scope": "france",
@@ -171,13 +190,13 @@
     "source": "https://www.imo.net/calendar/"
   },
   {
-    "date": "2027-07-20",
-    "endDate": null,
-    "title": "Maximum des Delta Aquarides du Sud",
+    "date": "2027-07-30",
+    "endDate": "2027-07-31",
+    "title": "Maximum des Alpha Capricornides",
     "category": "Pluie d’étoiles filantes",
     "scope": "france",
     "visibility": "Observable selon la hauteur du radiant, l’horizon, la Lune et la météo ; conditions locales à vérifier depuis Les Herbiers.",
-    "summary": "Maximum annoncé par l’International Meteor Organization pour les Delta Aquarides du Sud. L’activité réellement observée dépend des conditions du ciel.",
+    "summary": "Maximum annoncé par l’International Meteor Organization pour les Alpha Capricornides. L’activité réellement observée dépend des conditions du ciel.",
     "details": "Consulter le calendrier IMO pour la période d’activité et les particularités de cette pluie.",
     "time": "Nuit du maximum ; heure précise à vérifier dans le calendrier IMO.",
     "where": "Observer une large portion du ciel depuis un endroit sombre.",
@@ -190,13 +209,13 @@
     "source": "https://www.imo.net/calendar/"
   },
   {
-    "date": "2027-07-20",
-    "endDate": null,
-    "title": "Maximum des Alpha Capricornides",
+    "date": "2027-07-30",
+    "endDate": "2027-07-31",
+    "title": "Maximum des Delta Aquarides du Sud",
     "category": "Pluie d’étoiles filantes",
     "scope": "france",
     "visibility": "Observable selon la hauteur du radiant, l’horizon, la Lune et la météo ; conditions locales à vérifier depuis Les Herbiers.",
-    "summary": "Maximum annoncé par l’International Meteor Organization pour les Alpha Capricornides. L’activité réellement observée dépend des conditions du ciel.",
+    "summary": "Maximum annoncé par l’International Meteor Organization pour les Delta Aquarides du Sud. L’activité réellement observée dépend des conditions du ciel.",
     "details": "Consulter le calendrier IMO pour la période d’activité et les particularités de cette pluie.",
     "time": "Nuit du maximum ; heure précise à vérifier dans le calendrier IMO.",
     "where": "Observer une large portion du ciel depuis un endroit sombre.",
@@ -228,8 +247,8 @@
     "source": "https://eclipse.gsfc.nasa.gov/"
   },
   {
-    "date": "2027-08-20",
-    "endDate": null,
+    "date": "2027-08-12",
+    "endDate": "2027-08-13",
     "title": "Maximum des Perséides",
     "category": "Pluie d’étoiles filantes",
     "scope": "france",
@@ -247,8 +266,8 @@
     "source": "https://www.imo.net/calendar/"
   },
   {
-    "date": "2027-10-20",
-    "endDate": null,
+    "date": "2027-08-12",
+    "endDate": "2027-08-13",
     "title": "Maximum des Perséides",
     "category": "Pluie d’étoiles filantes",
     "scope": "france",
