@@ -1,4 +1,23 @@
-        run: |
+       
+name: Vérification hebdomadaire de l'agenda
+
+on:
+  schedule:
+    - cron: "30 17 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verification:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer les fichiers
+        uses: actions/checkout@v4
+
+      - name: Vérifier les fichiers JSON
+                run: |
           import json
           from pathlib import Path
 
