@@ -20,24 +20,6 @@ OPALE = "https://opale.imcce.fr/api/v1/phenomena"
 DATA_FILE = Path("data/evenements.json")
 PARIS = ZoneInfo("Europe/Paris")
 
-SHOWER_NAMES = {
-    "Leonids": "Léonides",
-    "Geminids": "Géminides",
-    "Ursids": "Ursides",
-    "Quadrantids": "Quadrantides",
-    "Lyrids": "Lyrides",
-    "Eta Aquariids": "Êta Aquarides",
-    "Perseids": "Perséides",
-    "Southern Delta Aquariids": "Delta Aquarides du Sud",
-    "Alpha Capricornids": "Alpha Capricornides",
-    "Orionids": "Orionides",
-    "Southern Taurids": "Taurides du Sud",
-    "Northern Taurids": "Taurides du Nord",
-}
-MONTHS = {
-    "jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6,
-    "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12,
-}
 PHASES = {
     "NewMoon": "Nouvelle Lune",
     "FirstQuarter": "Premier quartier",
@@ -58,92 +40,6 @@ def local_datetime(value):
     if instant.tzinfo is None:
         instant = instant.replace(tzinfo=timezone.utc)
     return instant.astimezone(PARIS)
-
-
-def future_peak(block, today):
-    match = re.search(
-        r"PEAK\s*NIGHT\s*:?[\s\u00a0]*(\d{1,2})\s*[–—-]\s*"
-        r"(\d{1,2})\s+([A-Za-z]{3})",
-        block,
-        re.IGNORECASE,
-    )
-    if not match:
-        return None
-    day = int(match.group(1))
-    month = MONTHS.get(match.group(3).lower())
-    if not month:
-        return None
-    year = today.year
-    try:
-        peak = date(year, month, day)
-    except ValueError:
-        return None
-    if peak < today:
-        try:
-            peak = date(year + 1, month, day)
-        except ValueError:
-            return None
-    return peak
-
-
-def meteor_events(today):
-    request = Request(IMO_URL, headers={"User-Agent": "AstroClubAgenda/2.0"})
-    with urlopen(request, timeout=45) as response:
-        soup = BeautifulSoup(response.read(), "html.parser")
-
-    generated = []
-    for english, french in SHOWER_NAMES.items():
-        heading = soup.find(
-            lambda tag: tag.name in ("h1", "h2", "h3", "h4")
-            and tag.get_text(" ", strip=True).casefold() == english.casefold()
-        )
-        if heading is None:
-            continue
-
-        block = ""
-        parent = heading
-        for _ in range(6):
-            parent = parent.parent
-            if parent is None:
-                break
-            candidate = " ".join(parent.get_text(" ", strip=True).split())
-            if re.search(r"PEAK\s*NIGHT", candidate, re.IGNORECASE):
-                block = candidate
-                break
-        if not block:
-            continue
-
-        peak = future_peak(block, today)
-        if peak is None:
-            continue
-        generated.append({
-            "date": peak.isoformat(),
-            "endDate": None,
-            "title": "Maximum des " + french,
-            "category": "Pluie d’étoiles filantes",
-            "scope": "france",
-            "visibility": "Pluie observable depuis la France si le radiant est au-dessus de l’horizon ; le nombre de météores dépend du ciel, de la Lune et de la météo.",
-            "summary": f"Maximum annoncé par l’International Meteor Organization pour les {french}.",
-            "details": "Le maximum est une période d’activité accrue, pas une garantie d’observer un nombre précis de météores. Consulter la source pour les mises à jour.",
-            "time": "Nuit indiquée par l’IMO ; vérifier les heures locales et la hauteur du radiant avant la sortie.",
-            "where": "Observer une large portion du ciel depuis un endroit sombre.",
-            "direction": "Regarder la zone la plus dégagée du ciel ; le radiant n’est pas la seule zone où apparaissent les météores.",
-            "altitude": "Non calculée automatiquement.",
-            "moon": "Consulter la phase lunaire correspondante dans l’agenda.",
-            "weather": "Vérifier les prévisions locales près des Herbiers le jour même.",
-            "equipment": "Observation à l’œil nu ; aucun instrument nécessaire.",
-            "tips": "S’éloigner des éclairages et laisser les yeux s’adapter à l’obscurité pendant 20 à 30 minutes.",
-            "source": IMO_URL,
-        })
-
-    # L'absence de quelques petites pluies est possible, mais une page presque
-    # vide indique généralement un changement de structure : on n'écrase rien.
-    if len(generated) < 3:
-        raise RuntimeError(
-            f"Seulement {len(generated)} maxima futurs lus sur l'IMO ; "
-            "mise à jour annulée pour protéger les données existantes."
-        )
-    return generated
 
 
 def moon_events(years, today):
@@ -294,7 +190,7 @@ def eclipse_events(years, today):
 
 
 def main():
-    today = date.today()
+    today = datetime.now(PARIS).date()
     if not DATA_FILE.exists():
         raise SystemExit(f"Fichier introuvable : {DATA_FILE}")
     with DATA_FILE.open(encoding="utf-8") as stream:
