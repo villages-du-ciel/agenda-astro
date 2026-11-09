@@ -1,36 +1,29 @@
-
-name: Vérification hebdomadaire de l'agenda
-
-on:
-  schedule:
-    - cron: "30 17 * * 1"
-  workflow_dispatch:
-
-permissions:
-  contents: read
-
-jobs:
-  verification:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Récupérer les fichiers
-        uses: actions/checkout@v4
-
-      - name: Vérifier les fichiers JSON
         run: |
-          python - <<'PY'
           import json
           from pathlib import Path
 
-          files = list(Path(".").rglob("*.json"))
+          file = Path("données/evenements.json")
 
-          if not files:
-              raise SystemExit("Aucun fichier JSON trouvé.")
+          if not file.exists():
+              raise SystemExit(f"Fichier introuvable : {file}")
 
-          for file in files:
-              with file.open(encoding="utf-8") as f:
-                  data = json.load(f)
-              print(f"OK : {file} — JSON valide")
+          with file.open(encoding="utf-8") as f:
+              events = json.load(f)
 
-          print(f"Vérification terminée : {len(files)} fichier(s).")
-          PY
+          if not isinstance(events, list):
+              raise SystemExit("Le fichier doit contenir une liste d'événements.")
+
+          required = ["date", "title", "category", "scope", "summary"]
+
+          for number, event in enumerate(events, start=1):
+              if not isinstance(event, dict):
+                  raise SystemExit(f"Événement {number} : format incorrect.")
+
+              missing = [key for key in required if not event.get(key)]
+
+              if missing:
+                  raise SystemExit(
+                      f"Événement {number} : champs manquants : {', '.join(missing)}"
+                  )
+
+          print(f"OK : {len(events)} événements vérifiés.")
