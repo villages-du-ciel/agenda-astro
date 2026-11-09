@@ -147,20 +147,28 @@ def meteor_events(today):
 
 
 def moon_events(years, today):
+    # US Naval Observatory : phases primaires en temps universel (UTC).
     generated = []
+    phase_names = {
+        "New Moon": "Nouvelle Lune",
+        "First Quarter": "Premier quartier",
+        "Full Moon": "Pleine Lune",
+        "Last Quarter": "Dernier quartier",
+    }
     for year in years:
-        url = OPALE + "/moonphases?" + urlencode({
-            "year": year, "calendar": "gregorian", "timescale": "UTC"
-        })
-        payload = get_json(url)
-        rows = payload.get("response", {}).get("data", [])
-        if not isinstance(rows, list) or len(rows) < 40:
-            raise RuntimeError(f"Réponse OPALE incomplète pour les phases lunaires {year}.")
+        payload = get_json(f"https://aa.usno.navy.mil/api/moon/phases/year?year={year}")
+        rows = payload.get("phasedata", [])
+        if payload.get("error") or not isinstance(rows, list) or len(rows) < 40:
+            raise RuntimeError(f"Réponse USNO incomplète pour les phases lunaires {year}.")
         for row in rows:
-            phase = PHASES.get(row.get("moonPhase"))
-            if not phase or not row.get("date"):
+            phase = phase_names.get(row.get("phase"))
+            if not phase:
                 continue
-            local = local_datetime(row["date"])
+            instant_utc = (
+                f"{int(row['year']):04d}-{int(row['month']):02d}-"
+                f"{int(row['day']):02d}T{row['time']}:00+00:00"
+            )
+            local = local_datetime(instant_utc)
             if local.date() < today:
                 continue
             generated.append({
@@ -171,7 +179,7 @@ def moon_events(years, today):
                 "scope": "france",
                 "visibility": "Phase astronomique observable depuis la France si la Lune est au-dessus de l’horizon et si le ciel est dégagé.",
                 "summary": f"{phase} à {local:%H:%M} (heure de Paris).",
-                "details": "Instant calculé par l’IMCCE. L’aspect de la Lune évolue autour de cet instant ; ce n’est pas une durée d’observation.",
+                "details": "Instant de phase calculé par l’US Naval Observatory ; l’aspect de la Lune évolue autour de cet instant.",
                 "time": f"{local:%H:%M} — heure locale de Paris (conversion depuis UTC).",
                 "where": "Observer la Lune si elle est au-dessus de l’horizon.",
                 "direction": "Dépend de l’heure et de la position de la Lune ; non calculée ici.",
@@ -180,12 +188,11 @@ def moon_events(years, today):
                 "weather": "Vérifier la couverture nuageuse locale.",
                 "equipment": "Œil nu ; jumelles ou télescope facultatifs.",
                 "tips": "La nouvelle Lune est difficile à observer dans l’éclat du Soleil ; ne jamais pointer un instrument vers le Soleil sans filtre solaire adapté.",
-                "source": "https://opale.imcce.fr/webservices/api.html",
+                "source": "https://aa.usno.navy.mil/data/api",
             })
-    if not generated:
-        raise RuntimeError("Aucune phase lunaire future reçue depuis OPALE.")
+    if len(generated) < 20:
+        raise RuntimeError("Trop peu de phases lunaires futures reçues depuis l’USNO.")
     return generated
-
 
 def find_eclipse_rows(value):
     found = []
@@ -296,12 +303,12 @@ def main():
         raise SystemExit("Le fichier JSON doit contenir une liste d'événements.")
 
     # Toutes les sources sont téléchargées et validées avant de toucher au fichier.
-    generated_meteors = meteor_events(today)
+    generated_meteors = []  # Les essaims sont conservés comme données éditoriales vérifiées.
     generated_moons = moon_events((today.year, today.year + 1), today)
     generated_eclipses = eclipse_events((today.year, today.year + 1), today)
 
     automatic_categories = {
-        "Pluie d’étoiles filantes", "Phase de la Lune", "Éclipse"
+        "Phase de la Lune", "Éclipse"
     }
     manual = [e for e in current if e.get("category") not in automatic_categories]
     merged = manual + generated_meteors + generated_moons + generated_eclipses
@@ -323,7 +330,7 @@ def main():
     temporary.write_text(json.dumps(merged, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     temporary.replace(DATA_FILE)
     print(
-        f"OK : {len(generated_meteors)} maxima IMO, "
+        f"OK : essaims conservés, "
         f"{len(generated_moons)} phases lunaires IMCCE, "
         f"{len(generated_eclipses)} éclipses IMCCE ; "
         f"{len(manual)} événements manuels conservés."
