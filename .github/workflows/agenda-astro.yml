@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: "30 17 * * 1"
   workflow_dispatch:
+  push:
+    paths:
+      - "scripts/update_events.py"
+      - "data/evenements.json"
+      - ".github/workflows/agenda-astro.yml"
 
 permissions:
   contents: write
@@ -15,16 +20,12 @@ jobs:
       - name: Récupérer les fichiers
         uses: actions/checkout@v4
 
-      - name: Installer Python et les dépendances
+      - name: Installer Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-          cache: "pip"
 
-      - name: Installer les bibliothèques
-        run: python -m pip install -r requirements.txt
-
-      - name: Actualiser les pluies de météores depuis l'IMO
+      - name: Actualiser les phases lunaires (USNO) et les éclipses (IMCCE)
         run: python scripts/update_events.py
 
       - name: Vérifier la structure et les dates du JSON
@@ -45,6 +46,7 @@ jobs:
               raise SystemExit("Le fichier doit contenir une liste non vide.")
 
           required = ["date", "title", "category", "scope", "summary"]
+          seen = set()
           for number, event in enumerate(events, start=1):
               if not isinstance(event, dict):
                   raise SystemExit(f"Événement {number} : format incorrect.")
@@ -56,17 +58,15 @@ jobs:
                   raise SystemExit(
                       f"Événement {number} : champs manquants : {', '.join(missing)}"
                   )
-              try:
-                  date.fromisoformat(event["date"])
-              except (TypeError, ValueError):
-                  raise SystemExit(
-                      f"Événement {number} : date invalide : {event.get('date')}"
-                  )
+              date.fromisoformat(event["date"])
               if event.get("endDate") is not None:
-                  try:
-                      date.fromisoformat(event["endDate"])
-                  except (TypeError, ValueError):
-                      raise SystemExit(f"Événement {number} : endDate invalide.")
+                  date.fromisoformat(event["endDate"])
+                  if event["endDate"] < event["date"]:
+                      raise SystemExit(f"Événement {number} : endDate avant date.")
+              key = (event["date"], event["title"])
+              if key in seen:
+                  raise SystemExit(f"Doublon détecté : {key}")
+              seen.add(key)
 
           print(f"OK : {len(events)} événements vérifiés.")
           PY
