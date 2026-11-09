@@ -1,0 +1,36 @@
+
+name: Vérification hebdomadaire de l'agenda
+
+on:
+  schedule:
+    - cron: "30 17 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verification:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer les fichiers
+        uses: actions/checkout@v4
+
+      - name: Vérifier les fichiers JSON
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          files = list(Path(".").rglob("*.json"))
+
+          if not files:
+              raise SystemExit("Aucun fichier JSON trouvé.")
+
+          for file in files:
+              with file.open(encoding="utf-8") as f:
+                  data = json.load(f)
+              print(f"OK : {file} — JSON valide")
+
+          print(f"Vérification terminée : {len(files)} fichier(s).")
+          PY
