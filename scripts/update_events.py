@@ -1,21 +1,17 @@
 #!/usr/bin/env python3
-"""Actualise l'agenda avec l'IMO et l'API officielle OPALE de l'IMCCE.
+"""Actualise les phases lunaires USNO et les éclipses IMCCE.
 
 Le script échoue sans modifier le JSON si une source est indisponible ou
 si sa structure ne correspond plus aux données attendues.
 """
 import json
-import re
 import sys
 from datetime import date, datetime, timezone
 from pathlib import Path
-from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 from zoneinfo import ZoneInfo
 
-from bs4 import BeautifulSoup
 
-IMO_URL = "https://www.imo.net/calendar/"
 OPALE = "https://opale.imcce.fr/api/v1/phenomena"
 DATA_FILE = Path("data/evenements.json")
 PARIS = ZoneInfo("Europe/Paris")
