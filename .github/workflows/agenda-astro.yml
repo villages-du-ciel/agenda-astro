@@ -24,7 +24,7 @@ jobs:
           from pathlib import Path
           from datetime import date
 
-          file = Path("données/evenements.json")
+          file = Path("data/evenements.json")
 
           if not file.exists():
               raise SystemExit(f"Fichier introuvable : {file}")
