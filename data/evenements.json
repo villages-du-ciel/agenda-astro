@@ -19,25 +19,6 @@
     "source": "https://www.imo.net/calendar/"
   },
   {
-    "date": "2026-11-09",
-    "endDate": null,
-    "title": "Nouvelle Lune",
-    "category": "Phase de la Lune",
-    "scope": "france",
-    "visibility": "Phase astronomique observable depuis la France si la Lune est au-dessus de l’horizon et si le ciel est dégagé.",
-    "summary": "Nouvelle Lune à 08:02 (heure de Paris).",
-    "details": "Instant de phase calculé par l’US Naval Observatory ; l’aspect de la Lune évolue autour de cet instant.",
-    "time": "08:02 — heure locale de Paris (conversion depuis UTC).",
-    "where": "Observer la Lune si elle est au-dessus de l’horizon.",
-    "direction": "Dépend de l’heure et de la position de la Lune ; non calculée ici.",
-    "altitude": "Non calculée automatiquement.",
-    "moon": "Nouvelle Lune",
-    "weather": "Vérifier la couverture nuageuse locale.",
-    "equipment": "Œil nu ; jumelles ou télescope facultatifs.",
-    "tips": "La nouvelle Lune est difficile à observer dans l’éclat du Soleil ; ne jamais pointer un instrument vers le Soleil sans filtre solaire adapté.",
-    "source": "https://aa.usno.navy.mil/data/api"
-  },
-  {
     "date": "2026-11-11",
     "endDate": "2026-11-12",
     "title": "Maximum des Taurides du Nord",
@@ -377,12 +358,7 @@
     "weather": "Vérifier les prévisions météorologiques du site choisi.",
     "equipment": "Filtre solaire certifié indispensable pendant toutes les phases partielles et annulaires. Ne jamais regarder le Soleil sans protection adaptée.",
     "tips": "Vérifier les circonstances locales et la trajectoire officielle avant tout déplacement.",
-    "source": "https://opale.imcce.fr/webservices/api.html",
-    "mapUrl": "https://eclipse.gsfc.nasa.gov/SEplot/SEplot2001/SE2027Feb06A.GIF",
-    "mapFormat": "image",
-    "mapTitle": "Trajectoire de l’éclipse annulaire du 6 février 2027",
-    "mapLink": "https://eclipse.gsfc.nasa.gov/SEgoogle/SEgoogle2001/SE2027Feb06Agoogle.html",
-    "mapCredit": "Carte de trajectoire : Fred Espenak, NASA/GSFC."
+    "source": "https://opale.imcce.fr/webservices/api.html"
   },
   {
     "date": "2027-02-14",
@@ -439,12 +415,7 @@
     "weather": "Vérifier les prévisions météorologiques du site choisi.",
     "equipment": "Œil nu ; jumelles facultatives.",
     "tips": "Une éclipse pénombrale est discrète et peut être difficile à distinguer à l’œil nu.",
-    "source": "https://opale.imcce.fr/webservices/api.html",
-    "mapUrl": "https://eclipse.gsfc.nasa.gov/LEplot/LEplot2001/LE2027Feb20N.pdf",
-    "mapFormat": "pdf",
-    "mapTitle": "Carte de visibilité de l’éclipse pénombrale de Lune des 20–21 février 2027",
-    "mapLink": "https://eclipse.gsfc.nasa.gov/LEplot/LEplot2001/LE2027Feb20N.pdf",
-    "mapCredit": "Carte de visibilité : Fred Espenak, NASA/GSFC."
+    "source": "https://opale.imcce.fr/webservices/api.html"
   },
   {
     "date": "2027-02-28",
@@ -881,12 +852,7 @@
     "weather": "Vérifier les prévisions météorologiques du site choisi.",
     "equipment": "Œil nu ; jumelles facultatives.",
     "tips": "Une éclipse pénombrale est discrète et peut être difficile à distinguer à l’œil nu.",
-    "source": "https://opale.imcce.fr/webservices/api.html",
-    "mapUrl": "https://eclipse.gsfc.nasa.gov/LEplot/LEplot2001/LE2027Jul18N.pdf",
-    "mapFormat": "pdf",
-    "mapTitle": "Carte de visibilité de l’éclipse pénombrale de Lune du 18 juillet 2027",
-    "mapLink": "https://eclipse.gsfc.nasa.gov/LEplot/LEplot2001/LE2027Jul18N.pdf",
-    "mapCredit": "Carte de visibilité : Fred Espenak, NASA/GSFC."
+    "source": "https://opale.imcce.fr/webservices/api.html"
   },
   {
     "date": "2027-07-26",
@@ -981,12 +947,7 @@
     "weather": "Vérifier les prévisions météorologiques du site choisi.",
     "equipment": "Filtre solaire certifié indispensable pendant toutes les phases partielles et annulaires. Ne jamais regarder le Soleil sans protection adaptée.",
     "tips": "Vérifier les circonstances locales et la trajectoire officielle avant tout déplacement.",
-    "source": "https://opale.imcce.fr/webservices/api.html",
-    "mapUrl": "https://eclipse.gsfc.nasa.gov/SEplot/SEplot2001/SE2027Aug02T.GIF",
-    "mapFormat": "image",
-    "mapTitle": "Trajectoire de l’éclipse totale de Soleil du 2 août 2027",
-    "mapLink": "https://eclipse.gsfc.nasa.gov/SEgoogle/SEgoogle2001/SE2027Aug02Tgoogle.html",
-    "mapCredit": "Carte de trajectoire : Fred Espenak, NASA/GSFC."
+    "source": "https://opale.imcce.fr/webservices/api.html"
   },
   {
     "date": "2027-08-09",
@@ -1062,12 +1023,7 @@
     "weather": "Vérifier les prévisions météorologiques du site choisi.",
     "equipment": "Œil nu ; jumelles facultatives.",
     "tips": "Une éclipse pénombrale est discrète et peut être difficile à distinguer à l’œil nu.",
-    "source": "https://opale.imcce.fr/webservices/api.html",
-    "mapUrl": "https://eclipse.gsfc.nasa.gov/LEplot/LEplot2001/LE2027Aug17N.pdf",
-    "mapFormat": "pdf",
-    "mapTitle": "Carte de visibilité de l’éclipse pénombrale de Lune du 17 août 2027",
-    "mapLink": "https://eclipse.gsfc.nasa.gov/LEplot/LEplot2001/LE2027Aug17N.pdf",
-    "mapCredit": "Carte de visibilité : Fred Espenak, NASA/GSFC."
+    "source": "https://opale.imcce.fr/webservices/api.html"
   },
   {
     "date": "2027-08-25",
